@@ -70,7 +70,7 @@ job1: Success
             Docker: Your dockerhub image link
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
 job2: Failed
-    if: ${{ vars.CONDITION == 'Conditionfail' && startsWith(github.event.head_commit.message, '#norun') != true }}
+    if: ${{ vars.CONDITIONFAIL == 'Conditionfail' && startsWith(github.event.head_commit.message, '#norun') != true }}
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout code
