@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - 'v[0-9]+.[0-9]+'
-jobs:
- scan:
+jobs:Success
+   if: ${{ vars.VARIABLE_NAME == 'A' && startsWith(github.event.head_commit.message, '#norun') != true }}
+   scan:
     name: Scan Repository 
     runs-on: ubuntu-20.04
     steps:
@@ -21,7 +22,7 @@ jobs:
         output: 'trivy-results.sarif'
         exit-code: '1'
         ignore-unfixed: true
-        severity: 'CRITICAL,HIGH'
+        severity: 'CRITICAL'
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -49,25 +50,57 @@ jobs:
     - name: Check install!
       run: cosign version
 
-    - name: Send custom JSON data to Slack workflow
-      id: slack
-      uses: slackapi/slack-github-action@v1.24.0
-      with:
-        payload: |
-          {
-            "text": "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
-            "blocks": [
-              {
-                "type": "section",
-                "text": {
-                  "type": "mrkdwn",
-                  "text": "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-                }
-              }
-            ]
-          }
-  
+    - name: Sign image with a key
+      run: |
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${TAGS}@${DIGEST}"
+      env:
+        TAGS: ${{ steps.docker_meta.outputs.tags }}
+        COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+        COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        DIGEST: ${{ steps.build-and-push.outputs.digest }}
 
-    env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+    - name: Send the notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+          SLACK_TITLE: "Image build and signed"
+          SLACK_MESSAGE: |
+            Name: # Your name
+            Matriculation: # Your student id
+            Email: # Your email
+            GitHub: Your GitHub repo link
+            Docker: Your dockerhub image link
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+job2: Failed
+    if: ${{ vars.VARIABLE_NAME == 'B' && startsWith(github.event.head_commit.message, '#norun') != true }}
+    scan:
+    name: Scan Repository 
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Run Trivy vulnerability scanner in IaC mode
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'config'
+        hide-progress: false
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        exit-code: '1'
+        ignore-unfixed: true
+        severity: 'HIGH'
+
+    - name: Send the notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+          SLACK_COLOR: '#FF0000'
+          SLACK_TITLE: "Scan failed - # Your name"
+          SLACK_MESSAGE: |
+            Failed trivy scan, see uploaded report
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+
+
+
+      
