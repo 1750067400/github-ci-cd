@@ -5,7 +5,7 @@ on:
     branches:
       - 'v[0-9]+.[0-9]+'
 job1: Success
-    if: ${{ vars.VARIABLE_NAME == 'A' && startsWith(github.event.head_commit.message, '#norun') != true }}
+    if: ${{ startsWith(github.event.head_commit.message, '#norun') != true }}
     runs-on: ubuntu-20.04
 
     steps:
@@ -70,7 +70,7 @@ job1: Success
             Docker: Your dockerhub image link
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
 job2: Failed
-    if: ${{ vars.VARIABLE_NAME == 'B' && startsWith(github.event.head_commit.message, '#norun') != true }}
+    if: ${{ startsWith(github.event.head_commit.message, '#norun') != true }}
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout code
