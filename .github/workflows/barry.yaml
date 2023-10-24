@@ -5,10 +5,9 @@ on:
     branches:
       - 'v[0-9]+.[0-9]+'
 job1: Success
-   if: ${{ vars.VARIABLE_NAME == 'A' && startsWith(github.event.head_commit.message, '#norun') != true }}
-   scan:
-    name: Scan Repository 
+    if: ${{ vars.VARIABLE_NAME == 'A' && startsWith(github.event.head_commit.message, '#norun') != true }}
     runs-on: ubuntu-20.04
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -64,16 +63,14 @@ job1: Success
       env:
           SLACK_TITLE: "Image build and signed"
           SLACK_MESSAGE: |
-            Name: # Your name
-            Matriculation: # Your student id
-            Email: # Your email
+            Name: # LI CHONGYANG
+            Matriculation: # A0285887B
+            Email: # e1221699@u.nus.edu
             GitHub: Your GitHub repo link
             Docker: Your dockerhub image link
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
 job2: Failed
     if: ${{ vars.VARIABLE_NAME == 'B' && startsWith(github.event.head_commit.message, '#norun') != true }}
-    scan:
-    name: Scan Repository 
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout code
@@ -94,7 +91,7 @@ job2: Failed
       uses: rtCamp/action-slack-notify@v2
       env:
           SLACK_COLOR: '#FF0000'
-          SLACK_TITLE: "Scan failed - # Your name"
+          SLACK_TITLE: "Scan failed - # LI CHONGYANG"
           SLACK_MESSAGE: |
             Failed trivy scan, see uploaded report
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
