@@ -42,7 +42,7 @@ jobs:
     if: needs.scan-job.outputs.severity == 'CRITICAL'
     runs-on: ubuntu-20.04
     steps:
-     - name: Set up QEMU
+    - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
