@@ -6,9 +6,8 @@ on:
       - 'v[0-9]+.[0-9]+'
 jobs:
   job1: Success
-    
+  
     runs-on: ubuntu-20.04
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -70,7 +69,7 @@ jobs:
             GitHub: Your GitHub repo link
             Docker: Your dockerhub image link
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-job2: Failed
+  job2: Failed
     
     runs-on: ubuntu-20.04
     steps:
