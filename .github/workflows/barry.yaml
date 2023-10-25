@@ -4,10 +4,15 @@ on:
   push:
     branches:
       - 'v[0-9]+.[0-9]+'
+    paths-ignore:
+      - '#NORUN*'
+
 jobs:
-  job1: 
-  
+  scan-job:
     runs-on: ubuntu-20.04
+    outputs:
+      severity: ${{ steps.set-severity.outputs.severity }}
+      
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -21,9 +26,23 @@ jobs:
         output: 'trivy-results.sarif'
         exit-code: '1'
         ignore-unfixed: true
-        severity: 'CRITICAL'
+        severity: 'CRITICAL,HIGH'
 
-    - name: Set up QEMU
+    - name: Parse Trivy SARIF results and set severity
+      id: set-severity
+      run: |
+        if grep -q "\"level\": \"error\"" trivy-results.sarif; then
+          echo "::set-output name=severity::CRITICAL"
+        else
+          echo "::set-output name=severity::HIGH"
+        fi
+
+  job1:
+    needs: scan-job
+    if: needs.scan-job.outputs.severity == 'CRITICAL'
+    runs-on: ubuntu-20.04
+    steps:
+     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
@@ -69,24 +88,12 @@ jobs:
             GitHub: Your GitHub repo link
             Docker: Your dockerhub image link
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-          
-  job2: 
+
+  job2:
+    needs: scan-job
+    if: needs.scan-job.outputs.severity == 'HIGH'
     runs-on: ubuntu-20.04
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Run Trivy vulnerability scanner in IaC mode
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'config'
-        hide-progress: false
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        exit-code: '1'
-        ignore-unfixed: true
-        severity: 'HIGH'
-
     - name: Send the notification
       uses: rtCamp/action-slack-notify@v2
       env:
@@ -95,9 +102,5 @@ jobs:
           SLACK_MESSAGE: |
             Failed trivy scan, see uploaded report
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-
-
-
 
       
