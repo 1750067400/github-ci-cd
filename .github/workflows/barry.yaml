@@ -29,13 +29,13 @@ jobs:
         severity: 'CRITICAL,HIGH'
 
     - name: Parse Trivy SARIF results and set severity
-      id: set-severity
       run: |
         if grep -q "\"level\": \"error\"" trivy-results.sarif; then
-          echo "::set-output name=severity::CRITICAL"
+            echo "severity=CRITICAL" >> $GITHUB_ENV
         else
-          echo "::set-output name=severity::HIGH"
+            echo "severity=HIGH" >> $GITHUB_ENV
         fi
+
 
   job1:
     needs: scan-job
