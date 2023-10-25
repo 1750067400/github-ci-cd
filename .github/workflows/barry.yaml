@@ -36,14 +36,31 @@ jobs:
             echo "severity=HIGH" >> $GITHUB_ENV
         fi
 
+    - name: Upload severity
+      uses: actions/upload-artifact@v2
+      with:
+        name: severity
+        path: severity.txt
+
+
 
   job1:
     needs: scan-job
-    if: needs.scan-job.outputs.severity == 'CRITICAL'
     runs-on: ubuntu-20.04
     steps:
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+    - name: Download severity
+      uses: actions/download-artifact@v2
+      with:
+        name: severity
+
+    - name: Check severity
+      id: check-severity
+      run: |
+        if grep -q "CRITICAL" severity.txt; then
+            echo "Running job1 because severity is CRITICAL"
+        else
+            exit 1
+        fi
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -91,9 +108,23 @@ jobs:
 
   job2:
     needs: scan-job
-    if: needs.scan-job.outputs.severity == 'HIGH'
     runs-on: ubuntu-20.04
     steps:
+    - name: Download severity
+      uses: actions/download-artifact@v2
+      with:
+        name: severity
+
+    - name: Check severity
+      id: check-severity
+      run: |
+        if grep -q "HIGH" severity.txt; then
+            echo "Running job2 because severity is HIGH"
+        else
+            exit 1
+        fi
+
+   
     - name: Send the notification
       uses: rtCamp/action-slack-notify@v2
       env:
