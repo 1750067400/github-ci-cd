@@ -30,11 +30,12 @@ jobs:
 
     - name: Parse Trivy SARIF results and set severity
       run: |
-        if grep -q "\"level\": \"error\"" trivy-results.sarif; then
-            echo "severity=CRITICAL" >> $GITHUB_ENV
-        else
-            echo "severity=HIGH" >> $GITHUB_ENV
-        fi
+       if grep -q "\"level\": \"error\"" trivy-results.sarif; then
+           echo "CRITICAL" > severity.txt
+       else
+           echo "HIGH" > severity.txt
+       fi
+
 
     - name: Upload severity
       uses: actions/upload-artifact@v2
