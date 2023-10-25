@@ -95,6 +95,7 @@ jobs:
         COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         DIGEST: ${{ steps.build-and-push.outputs.digest }}
 
+
     - name: Send the notification
       uses: rtCamp/action-slack-notify@v2
       env:
