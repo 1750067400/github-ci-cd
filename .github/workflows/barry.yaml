@@ -57,7 +57,7 @@ jobs:
     - name: Check severity
       id: check-severity
       run: |
-        if grep -q "HIGH" severity.txt; then
+        if grep -q "CRITICAL" severity.txt; then
             echo "Running job1 because severity is CRITICAL"
         else
             exit 1
@@ -120,7 +120,7 @@ jobs:
     - name: Check severity
       id: check-severity
       run: |
-        if grep -q "CRITICAL" severity.txt; then
+        if grep -q "HIGH" severity.txt; then
             echo "Running job2 because severity is HIGH"
         else
             exit 1
