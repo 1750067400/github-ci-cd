@@ -101,4 +101,3 @@ jobs:
         channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
         file_path: 'trivy-results.txt'
         initial_comment: 'Scan report by LI CHONGYANG'
-
