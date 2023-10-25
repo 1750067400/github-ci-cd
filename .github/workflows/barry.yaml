@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - 'v[0-9]+.[0-9]+'
-job1: Success
-    if: ${{ vars.CONDITION == 'Conditionsuccess' && startsWith(github.event.head_commit.message, '#norun') != true }}
+jobs:
+  job1: Success
+    if: ${{ env.CONDITION == 'Conditionsuccess' && startsWith(github.event.head_commit.message, '#norun') != true }}
     runs-on: ubuntu-20.04
 
     steps:
@@ -70,7 +71,7 @@ job1: Success
             Docker: Your dockerhub image link
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
 job2: Failed
-    if: ${{ vars.CONDITIONFAIL == 'Conditionfail' && startsWith(github.event.head_commit.message, '#norun') != true }}
+    if: ${{ env.CONDITIONFAIL == 'Conditionfail' && startsWith(github.event.head_commit.message, '#norun') != true }}
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout code
