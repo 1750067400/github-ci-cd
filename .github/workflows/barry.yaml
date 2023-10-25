@@ -4,15 +4,10 @@ on:
   push:
     branches:
       - 'v[0-9]+.[0-9]+'
-    paths-ignore:
-      - '#NORUN*'
 
 jobs:
-  scan-job:
+  job1: 
     runs-on: ubuntu-20.04
-    outputs:
-      severity: ${{ steps.set-severity.outputs.severity }}
-      
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -22,46 +17,13 @@ jobs:
       with:
         scan-type: 'config'
         hide-progress: false
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-        exit-code: '1'
+        format: 'table'
+        output: 'trivy-results.txt'
         ignore-unfixed: true
-        severity: 'CRITICAL,HIGH'
+        severity: 'CRITICAL'
 
-    - name: Parse Trivy SARIF results and set severity
-      run: |
-       if grep -q "\"level\": \"error\"" trivy-results.sarif; then
-           echo "CRITICAL" > severity.txt
-       else
-           echo "HIGH" > severity.txt
-       fi
-
-
-    - name: Upload severity
-      uses: actions/upload-artifact@v2
-      with:
-        name: severity
-        path: severity.txt
-
-
-
-  job1:
-    needs: scan-job
-    runs-on: ubuntu-20.04
-    steps:
-    - name: Download severity
-      uses: actions/download-artifact@v2
-      with:
-        name: severity
-
-    - name: Check severity
-      id: check-severity
-      run: |
-        if grep -q "CRITICAL" severity.txt; then
-            echo "Running job1 because severity is CRITICAL"
-        else
-            exit 1
-        fi
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -79,9 +41,9 @@ jobs:
         tags: barry126/app:latest
 
     - name: Install Cosign
-      uses: sigstore/cosign-installer@v3.1.1
+      uses: sigstore/cosign-installer@v2.2.0
       with:
-        cosign-release: 'v2.1.1'
+        cosign-release: 'v2.2.0'
 
     - name: Check install!
       run: cosign version
@@ -95,52 +57,49 @@ jobs:
         COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         DIGEST: ${{ steps.build-and-push.outputs.digest }}
 
-
     - name: Send the notification
       uses: rtCamp/action-slack-notify@v2
       env:
-          SLACK_TITLE: "Image build and signed"
-          SLACK_MESSAGE: |
-            Name: # LI CHONGYANG
-            Matriculation: # A0285887B
-            Email: # e1221699@u.nus.edu
-            GitHub: Your GitHub repo link
-            Docker: Your dockerhub image link
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-  job2:
-    needs: scan-job
+        SLACK_TITLE: "Image build and signed"
+        SLACK_MESSAGE: |
+          Name: LI CHONGYANG
+          Matriculation: A0285887B
+          Email: e1221699@u.nus.edu
+          GitHub: https://github.com/1750067400/github-ci-cd
+          Docker: https://hub.docker.com/repository/docker/barry126/app/general
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          
+  job2: 
     runs-on: ubuntu-20.04
     steps:
-    - name: Download severity
-      uses: actions/download-artifact@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Run Trivy vulnerability scanner in IaC mode
+      uses: aquasecurity/trivy-action@master
       with:
-        name: severity
+        scan-type: 'config'
+        hide-progress: false
+        format: 'table'
+        output: 'trivy-results.txt'
+        exit-code: '1'
+        ignore-unfixed: true
+        severity: 'HIGH'
 
-    - name: Check severity
-      id: check-severity
-      run: |
-        if grep -q "HIGH" severity.txt; then
-            echo "Running job2 because severity is HIGH"
-        else
-            exit 1
-        fi
-
-   
     - name: Send the notification
       uses: rtCamp/action-slack-notify@v2
       env:
-          SLACK_COLOR: '#FF0000'
-          SLACK_TITLE: "Scan failed - # LI CHONGYANG"
-          SLACK_MESSAGE: |
-            Failed trivy scan, see uploaded report
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        SLACK_COLOR: '#FF0000'
+        SLACK_TITLE: "Scan failed - LI CHONGYANG"
+        SLACK_MESSAGE: |
+          Failed trivy scan, see uploaded report
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-    - uses: MeilCli/slack-upload-file@v3
+    - name: Upload to Slack
+      uses: MeilCli/slack-upload-file@v3
       with:
         slack_token: ${{ secrets.SLACK_TOKEN }}
         channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
-        file_path: # path to your trivy report
+        file_path: 'trivy-results.txt'
         initial_comment: 'Scan report by LI CHONGYANG'
-
-      
+        
