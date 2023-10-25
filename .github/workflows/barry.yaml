@@ -1,4 +1,4 @@
-name: CI/CD Workflow
+name: Barry's workflow
 
 on:
   push:
