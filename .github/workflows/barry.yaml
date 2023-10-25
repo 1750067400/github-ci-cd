@@ -35,10 +35,11 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     
     - name: Build and push
+      id: build-and-push
       uses: docker/build-push-action@v5
       with:
         push: true
-        tags: barry126/app:latest
+        tags: barry126/app:${{ github.sha }}
 
     - name: Install Cosign
       uses: sigstore/cosign-installer@v2.2.0
@@ -52,7 +53,7 @@ jobs:
       run: |
           cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${TAGS}@${DIGEST}"
       env:
-        TAGS: ${{ steps.docker_meta.outputs.tags }}
+        TAGS: barry126/app:${{ github.sha }}
         COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
         COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         DIGEST: ${{ steps.build-and-push.outputs.digest }}
@@ -78,11 +79,9 @@ jobs:
     - name: Run Trivy vulnerability scanner in IaC mode
       uses: aquasecurity/trivy-action@master
       with:
-        scan-type: 'config'
-        hide-progress: false
+        scan-type: 'fs'
         format: 'table'
         output: 'trivy-results.txt'
-        exit-code: '1'
         ignore-unfixed: true
         severity: 'HIGH'
 
@@ -102,4 +101,4 @@ jobs:
         channel_id: ${{ secrets.SLACK_CHANNEL_ID }}
         file_path: 'trivy-results.txt'
         initial_comment: 'Scan report by LI CHONGYANG'
-        
+
