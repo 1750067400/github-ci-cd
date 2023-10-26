@@ -7,6 +7,7 @@ on:
 
 jobs:
   job1: 
+    if: ${{ startsWith(github.event.head_commit.message, '#norun') != true }}
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout code
@@ -71,6 +72,7 @@ jobs:
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           
   job2: 
+    if: ${{ startsWith(github.event.head_commit.message, '#norun') != true }}
     runs-on: ubuntu-20.04
     steps:
     - name: Checkout code
